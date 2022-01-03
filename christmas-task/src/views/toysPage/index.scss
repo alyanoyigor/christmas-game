@@ -1,0 +1,362 @@
+.page-toys {
+  background-color: $bg_color;
+  display: grid;
+  min-height: calc(100vh - 140px);
+  grid-template-columns: 1fr 3fr;
+}
+
+.page-toys__settings {
+  display: flex;
+  height: 100%;
+  padding: 16px 16px 16px 24px;
+  flex-direction: column;
+  row-gap: 24px;
+}
+
+.page-toys__toys {
+  padding: 16px 16px;
+}
+
+
+.search-bar {
+  position: relative;
+}
+
+.search-input {
+  max-width: 254px;
+  width: 100%;
+  height: 36px;
+  background: rgba(36, 197, 219, 0.2);
+  backdrop-filter: blur(5.5px);
+  border: 1px solid rgba(36, 197, 219, 0.8);
+  border-radius: 30px;
+  font-family: 'Open-Sans', sans-serif;
+  padding: 8px 40px 8px 14px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.search-input::-webkit-search-cancel-button {
+  cursor: pointer;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background-image: url('data:image/svg+xml;utf8,<svg stroke="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><path d="M1.458 1.458l21.084 21.084m0-21.084L1.458 22.542" /></svg>');
+  background-size: 10px 10px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.search-btn {
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  right: 14px;
+  z-index: 1;
+  background: center / contain no-repeat url('../../assets/svg/search.svg');
+  width: 24px;
+  height: 24px;
+}
+
+.sort-select {
+  max-width: 178px;
+  width: 100%;
+  font-family: 'Open-Sans', sans-serif;
+  font-size: 12px;
+  appearance: none;
+  color: #fff;
+  outline: none;
+  @include glassmorfBtn;
+  padding: 9px 32px 7px 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position-x: 95%;
+  background-position-y: 50%;
+  text-overflow: ellipsis;
+  cursor: pointer;
+
+  option {
+    background-color: #3c5857;
+    font-size: 14px;
+  }
+}
+
+.sort-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}
+
+
+.category-title {
+  font: 400 18px 'Open-Sans', sans-serif;
+  padding-bottom: 8px;
+  color: #fff;
+  margin: 0;
+}
+
+.categories-box,
+.categories-wrapper {
+  display: flex;
+  flex-direction: column;
+  row-gap: 12px;
+}
+
+.categories-wrapper {
+  row-gap: 24px;
+}
+
+.shape-categories {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.shape-category__checkbox,
+.color-category__checkbox,
+.box-category__checkbox {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+}
+
+.shape-category__checkbox + .shape-category__label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  color: #fff;
+  user-select: none;
+  font: 400 12px 'Open-Sans', sans-serif;
+  cursor: pointer;
+  @extend %common_trans;
+}
+
+.shape-category__checkbox + .shape-category__label::before {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 42px;
+}
+
+.shape-category__checkbox:not(:disabled):not(:checked) + .shape-category__label:hover::before,
+.shape-category__checkbox:not(:disabled):not(:checked) + .shape-category__label:hover {
+  filter: brightness(80%);
+}
+
+.shape-category__checkbox:checked + .shape-category__label::before,
+.shape-category__checkbox:checked + .shape-category__label {
+  filter: $main_color_filter;
+  color: $main_color;
+}
+
+.shape-category__checkbox[value='колокольчик'] + .shape-category__label::before {
+  background: center / contain no-repeat url('../../assets/svg/bell.svg');
+}
+.shape-category__checkbox[value='шар'] + .shape-category__label::before {
+  background: center / contain no-repeat url('../../assets/svg/ball.svg');
+}
+.shape-category__checkbox[value='шишка'] + .shape-category__label::before {
+  background: center / contain no-repeat url('../../assets/svg/cone.svg');
+}
+.shape-category__checkbox[value='снежинка'] + .shape-category__label::before {
+  background: center / contain no-repeat url('../../assets/svg/snowflake.svg');
+}
+.shape-category__checkbox[value='фигурка'] + .shape-category__label::before {
+  background: center / contain no-repeat url('../../assets/svg/toy.svg');
+}
+
+.noUi-base {
+  cursor: pointer !important;
+
+  .noUi-connect {
+    background-color: $main_color;
+  }
+  .noUi-handle {
+    background-color: #fff;
+    border: none;
+    box-shadow: none;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+}
+
+.noUi-tooltip {
+  display: none !important;
+}
+
+.noUi-handle {
+  cursor: ew-resize !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  right: -8px !important;
+  opacity: 0.8;
+  background-image: url('../../assets/svg/thumb.svg') !important;
+  background-repeat: no-repeat;
+  background-size: 100%;
+}
+
+.noUi-horizontal {
+  height: 6px !important;
+}
+
+.noUi-target {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.count-wrapper,
+.year-wrapper {
+  display: flex;
+  flex-direction: column;
+  row-gap: 12px;
+}
+
+.skip-value {
+  display: flex;
+  justify-content: space-between;
+  color: #fff;
+  font: 12px 'Open-Sans', sans-serif;
+}
+
+.color-category__checkbox + .color-category__label::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background-repeat: no-repeat;
+  background-size: 60% 60%;
+  background-position: center;
+  @extend %common_trans;
+  cursor: pointer;
+}
+
+.color-categories,
+.size-categories {
+  display: flex;
+  gap: 8px 24px;
+  flex-wrap: wrap;
+}
+
+.color-category__checkbox + .color-category__label:hover::before {
+  transform: scale(1.1);
+  box-shadow: 0px 0px 20px 3px rgba(39, 141, 159, 0.5);
+}
+
+.color-category__checkbox[value='белый'] + .color-category__label::before {
+  background-color: #fff;
+}
+
+.color-category__checkbox[value='желтый'] + .color-category__label::before {
+  background-color: #fdd700;
+}
+
+.color-category__checkbox[value='красный'] + .color-category__label::before {
+  background-color: #fd0000;
+}
+
+.color-category__checkbox[value='синий'] + .color-category__label::before {
+  background-color: #2299eb;
+}
+
+.color-category__checkbox[value='зелёный'] + .color-category__label::before {
+  background-color: #08aa05;
+}
+
+.color-category__checkbox:checked + .color-category__label::before {
+  background-image: url('../../assets/svg/check-mark.svg');
+}
+
+.box-category__checkbox + .box-category__label {
+  @extend %common_trans;
+  user-select: none;
+  cursor: pointer;
+  font-family: 'Open-Sans', sans-serif;
+}
+
+.box-category__checkbox + .box-category__label::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-size: 60% 60%;
+  background-position: center;
+  @extend %common_trans;
+  @include glassmorfBtn(5px);
+}
+
+.box-category__checkbox + .box-category__label:hover::before {
+  box-shadow: 0px 0px 20px 3px rgba(39, 141, 159, 0.5);
+}
+.box-category__checkbox + .box-category__label:hover {
+  color: $main_color;
+}
+
+.box-category__checkbox:checked + .box-category__label::before {
+  background-image: url('../../assets/svg/check-mark.svg');
+}
+
+.box-category__label {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 8px;
+  color: #fff;
+}
+
+.default-settings-btn {
+  max-width: 180px;
+  height: 38px;
+  width: 100%;
+  font-family: 'Open-Sans', sans-serif;
+  font-size: 12px;
+  color: #fff;
+  outline: none;
+  @include glassmorfBtn;
+}
+
+.page-title {
+  font: 400 42px 'Neucha', sans-serif;
+  color: #fff;
+  text-transform: uppercase;
+  margin: 0 0 32px;
+}
+
+.toys-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+}
+
+.not-found-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: #fff;
+}
+
+.not-found-card__title {
+  margin: 0 0 12px;
+  font: 400 36px 'Neucha', sans-serif;
+}
+
+.not-found-card__subtitle {
+  margin: 0 0 24px;
+  font-family: 'Open-Sans', sans-serif;
+}
+
+.hide {
+  display: none;
+}
