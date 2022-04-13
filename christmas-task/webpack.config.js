@@ -150,6 +150,7 @@ module.exports = ({ development }) => {
     ],
     resolve: {
       extensions: ['.js', '.ts'],
+      modules: [srcPath, 'node_modules'],
     },
     ...devServer(development),
   };

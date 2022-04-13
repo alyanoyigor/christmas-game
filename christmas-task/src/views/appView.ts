@@ -1,41 +1,56 @@
-import { ToyCardData } from './toysPage/toyCard/toyCard';
+import { HTMLElementEvent } from 'common/types';
+import { TreePage } from './treePage/treePage';
 import { MainPage } from './mainPage/mainPage';
 import { ToysPage } from './toysPage/toysPage';
 
 export class AppView {
   private toysPage: ToysPage;
   private mainPage: MainPage;
-  private nav: HTMLElement;
-  private headerToMainPageBtn: HTMLElement;
-  private headerToToysPageBtn: HTMLElement;
-  private mainToToysPageBtn: HTMLElement;
-  private navLink: HTMLElement;
+  private treePage: TreePage;
+  private nav: HTMLElement | null;
+  private headerToMainPageBtn: HTMLElement | null;
+  private headerToToysPageBtn: HTMLElement | null;
+  private headerToTreePageBtn: HTMLElement | null;
+  private mainToToysPageBtn: HTMLElement | null;
+  private navLink: HTMLElement | null;
 
   constructor() {
     this.toysPage = new ToysPage();
     this.mainPage = new MainPage();
-    this.nav = document.querySelector('.nav') as HTMLElement;
-    this.headerToMainPageBtn = this.nav.querySelector('.to-main-page') as HTMLElement;
-    this.headerToToysPageBtn = this.nav.querySelector('.to-toys-page') as HTMLElement;
-    this.mainToToysPageBtn = this.mainPage.mainPageHTML.querySelector(
-      '.to-toys-page'
-    ) as HTMLElement;
-    this.navLink = this.nav.querySelectorAll<HTMLElement>('.nav__link')[0];
+    this.treePage = new TreePage();
+    this.nav = document.querySelector('.nav');
+    this.headerToMainPageBtn = document.querySelector('.to-main-page');
+    this.headerToToysPageBtn = document.querySelector('.to-toys-page');
+    this.headerToTreePageBtn = document.querySelector('.to-tree-page');
+    const mainPageHTML = this.mainPage.mainPageHTML;
+    this.mainToToysPageBtn = mainPageHTML ? mainPageHTML?.querySelector('.to-toys-page') : null;
+    this.navLink = document.querySelector('.nav__link');
 
-    this.headerToMainPageBtn.addEventListener('click', () => this.drawMainPage());
-    this.headerToToysPageBtn.addEventListener('click', () => this.drawToysPage());
-    this.mainToToysPageBtn.addEventListener('click', () => {
+    this.headerToMainPageBtn?.addEventListener('click', this.drawMainPage.bind(this));
+    this.headerToTreePageBtn?.addEventListener('click', () =>
+      this.drawTreePage(this.toysPage.actualData.selectedNumCards)
+    );
+    this.headerToToysPageBtn?.addEventListener('click', this.drawToysPage.bind(this));
+    this.mainToToysPageBtn?.addEventListener('click', () => {
       this.drawToysPage();
-      this.navLink.classList.add('active-link');
+      if (this.navLink) this.navLink.classList.add('active-link');
     });
-    this.nav.addEventListener('click', this.updateActiveLink);
+    this.nav?.addEventListener('click', (e: HTMLElementEvent<Event, HTMLElement>) =>
+      this.updateActiveLink(e)
+    );
   }
-  updateActiveLink(e: Event) {
-    const target = e.target as HTMLElement;
+
+  updateActiveLink(e: HTMLElementEvent<Event, HTMLElement>) {
+    const target = e.target;
     document.querySelector('.active-link')?.classList.remove('active-link');
-    if (target.classList.contains('nav__link')) {
-      target.classList.add('active-link');
-    }
+
+    if (target instanceof HTMLElement)
+      target.classList.contains('nav__link') ? target.classList.add('active-link') : null;
+  }
+
+  removeMainContent(): void {
+    const main = document.querySelector('.main');
+    if (main) main.innerHTML = '';
   }
 
   drawMainPage(): void {
@@ -43,12 +58,13 @@ export class AppView {
     this.mainPage.draw();
   }
 
+  drawTreePage(selectedNumCards: String[] = []): void {
+    this.removeMainContent();
+    this.treePage.draw(selectedNumCards);
+  }
+
   drawToysPage(): void {
     this.removeMainContent();
     this.toysPage.draw();
-  }
-
-  removeMainContent(): void {
-    (document.querySelector('.main') as HTMLElement).innerHTML = '';
   }
 }

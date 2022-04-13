@@ -1,200 +1,197 @@
-import { Popup } from './../popup/popup';
-import { NoUiSlider, CreateSliderData } from './noUiSlider/noUiSlider';
-import { Page } from '../page/page';
-import { ToyCard, ToyCardData } from './toyCard/toyCard';
+import { Popup } from 'views/popup/popup';
+import { ActualData, InitNoUiSlider, SliderFromTo, ToyCardData } from 'common/interfaces';
+import { NoUiSlider } from './noUiSlider/noUiSlider';
+import { Page } from 'views/page/page';
+import { ToyCard } from './toyCard/toyCard';
 import { target, API } from 'nouislider';
+import { data } from 'data/data';
+import { FromToKeys } from 'common/enums';
 import './index.scss';
-import { data } from '../../data/data';
-
-interface InitNoUiSlider extends CreateSliderData {
-  selector: string;
-}
-
-export interface FromToObj {
-  0?: number;
-  1?: number;
-}
-
-export interface ActualObjData {
-  selectedNumCards?: String[];
-  sort?: string;
-  count?: FromToObj;
-  year?: FromToObj;
-  shape?: String[];
-  color?: String[];
-  size?: String[];
-  isFav?: boolean;
-  search?: string;
-}
 
 export class ToysPage extends Page {
-  private toyPageHTML: HTMLElement;
-  private toyCardsHTML: HTMLElement;
-  private filterObj: ActualObjData;
-  private selectedCardsAmount: HTMLElement;
-  private searchInput: HTMLInputElement;
-  private sortSelect: HTMLSelectElement;
-  private favCheckbox: HTMLInputElement;
+  private toyPageHTML: Element | null;
+  private toyCardsHTML: HTMLElement | null;
+  actualData: ActualData;
+  private selectedCardsAmount: HTMLElement | null;
+  private searchInput: HTMLInputElement | null;
+  private sortSelect: HTMLSelectElement | null;
+  private favCheckbox: HTMLInputElement | null;
   private noUiSlider: NoUiSlider;
+  private MIN_SLIDER_COUNT: number;
+  private MAX_SLIDER_COUNT: number;
+  private STEP_SLIDER_COUNT: number;
+  private MIN_SLIDER_YEAR: number;
+  private MAX_SLIDER_YEAR: number;
+  private STEP_SLIDER_YEAR: number;
   readonly START_SELECTED_NUM: number;
 
   constructor() {
     super();
     this.noUiSlider = new NoUiSlider();
-    this.toyPageHTML = <HTMLElement>this.createHtmlElement(this.render());
-
-    this.toyCardsHTML = <HTMLElement>this.toyPageHTML.querySelector('.toys-cards');
-    this.selectedCardsAmount = <HTMLElement>document.querySelector('.selected-cards__amount');
-    this.searchInput = <HTMLInputElement>this.toyPageHTML.querySelector('.search-input');
-    this.sortSelect = <HTMLSelectElement>this.toyPageHTML.querySelector('.sort-select');
-    this.favCheckbox = <HTMLInputElement>this.toyPageHTML.querySelector('.fav-category__checkbox');
+    this.toyPageHTML = this.createHtmlElement(this.render());
+    this.toyCardsHTML = this.findElement(this.toyPageHTML, '.toys-cards');
+    this.selectedCardsAmount = document.querySelector('.selected-cards__amount');
+    this.searchInput = this.findElement(this.toyPageHTML, '.search-input');
+    this.sortSelect = this.findElement(this.toyPageHTML, '.sort-select');
+    this.favCheckbox = this.findElement(this.toyPageHTML, '.fav-category__checkbox');
     this.START_SELECTED_NUM = 0;
+    this.MIN_SLIDER_COUNT = 1;
+    this.MAX_SLIDER_COUNT = 12;
+    this.STEP_SLIDER_COUNT = 1;
+    this.MIN_SLIDER_YEAR = 1940;
+    this.MAX_SLIDER_YEAR = 2020;
+    this.STEP_SLIDER_YEAR = 10;
 
     window.addEventListener('beforeunload', () => {
-      localStorage.setItem('data', JSON.stringify(this.filterObj));
+      localStorage.setItem('data', JSON.stringify(this.actualData));
     });
     const localStorageData = localStorage.getItem('data');
-    if (localStorageData) {
-      this.filterObj = JSON.parse(localStorageData);
-    } else {
-      this.filterObj = {};
-    }
+    this.actualData = localStorageData ? JSON.parse(localStorageData) : {};
     window.addEventListener('load', () => {
       this.setLocalStorageCardsData();
     });
   }
 
   changeCheckboxAfterUpdate(selector: string) {
-    const objProperty = this.filterObj[selector as keyof ActualObjData] as String[];
-
+    const selectedCheckboxes = this.actualData[selector as keyof ActualData] as String[];
     this.toyPageHTML
-      .querySelectorAll<HTMLInputElement>(`.${selector}-category__checkbox`)
-      .forEach((item) => {
-        objProperty.includes(item.value) ? (item.checked = true) : null;
+      ?.querySelectorAll<HTMLInputElement>(`.${selector}-category__checkbox`)
+      .forEach((checkbox) => {
+        selectedCheckboxes.includes(checkbox.value)
+          ? checkbox.setAttribute('checked', 'true')
+          : null;
       });
   }
 
   setLocalStorageCardsData() {
-    if (this.filterObj.sort) {
-      this.sortSelect.value = this.filterObj.sort;
+    if (this.actualData.sort) {
+      this.sortSelect ? (this.sortSelect.value = this.actualData.sort) : null;
     }
-    if (this.filterObj.shape) {
+    if (this.actualData.shape) {
       this.changeCheckboxAfterUpdate('shape');
     }
-    if (this.filterObj.color) {
+    if (this.actualData.color) {
       this.changeCheckboxAfterUpdate('color');
     }
-    if (this.filterObj.size) {
+    if (this.actualData.size) {
       this.changeCheckboxAfterUpdate('size');
     }
-    if (this.filterObj.isFav) {
-      this.favCheckbox.checked = true;
+    if (this.actualData.isFav) {
+      this.favCheckbox ? (this.favCheckbox.checked = true) : null;
     }
-    if (this.filterObj.search) {
-      this.searchInput.value = this.filterObj.search;
+    if (this.actualData.search) {
+      this.searchInput ? (this.searchInput.value = this.actualData.search) : null;
     }
-    if (this.filterObj.selectedNumCards) {
-      this.selectedCardsAmount.textContent = this.filterObj.selectedNumCards.length.toString();
+    if (this.actualData.selectedNumCards) {
+      this.selectedCardsAmount
+        ? (this.selectedCardsAmount.textContent =
+            this.actualData.selectedNumCards.length.toString())
+        : null;
     }
   }
 
   searchToyCards() {
-    const searchBtn = <HTMLElement>this.toyPageHTML.querySelector('.search-btn');
+    const searchBtn = this.findElement(this.toyPageHTML, '.search-btn');
     window.addEventListener('load', () => {
       this.searchInput?.focus();
     });
     const setSearchData = () => {
-      this.filterObj.search = this.searchInput.value;
-      this.changeDataCards(this.filterObj);
+      this.actualData.search = this.searchInput?.value.toLowerCase();
+      this.changeDataCards(this.actualData);
     };
-    searchBtn.addEventListener('click', (e) => {
+    searchBtn?.addEventListener('click', (e) => {
       e.preventDefault();
       setSearchData();
     });
-    this.searchInput.addEventListener('input', function () {
-      setSearchData();
-    });
+    this.searchInput?.addEventListener('input', setSearchData);
   }
 
   draw() {
-    this.changeDataCards(this.filterObj);
+    this.changeDataCards(this.actualData);
     this.filterToyCards();
     this.searchToyCards();
-    (document.querySelector('.main') as HTMLElement).append(this.toyPageHTML);
+    const main = document.querySelector('.main');
+    if (this.toyPageHTML) main?.append(this.toyPageHTML);
     this.createSliders();
   }
-  
+
   createSliders() {
-    if (this.filterObj?.count?.[0] && this.filterObj?.count?.[1]) {
-      this.initCountSlider(this.filterObj.count[0], this.filterObj.count[1]);
+    if (this.actualData?.count?.from && this.actualData?.count?.to) {
+      this.initCountSlider(this.actualData.count.from, this.actualData.count.to);
     } else {
       this.initCountSlider();
     }
 
-    if (this.filterObj?.year?.[0] && this.filterObj?.year?.[1]) {
-      this.initYearSlider(this.filterObj.year[0], this.filterObj.year[1]);
+    if (this.actualData?.year?.from && this.actualData?.year?.to) {
+      this.initYearSlider(this.actualData.year.from, this.actualData.year.to);
     } else {
       this.initYearSlider();
     }
   }
 
-  initCountSlider(start = 1, end = 12) {
+  initCountSlider(start = this.MIN_SLIDER_COUNT, end = this.MAX_SLIDER_COUNT) {
     this.initNoUiSlider({
       selector: 'count',
-      step: 1,
+      step: this.STEP_SLIDER_COUNT,
       start,
       end,
-      min: 1,
-      max: 12,
+      min: this.MIN_SLIDER_COUNT,
+      max: this.MAX_SLIDER_COUNT,
     });
   }
 
-  initYearSlider(start = 1940, end = 2020) {
+  initYearSlider(start = this.MIN_SLIDER_YEAR, end = this.MAX_SLIDER_YEAR) {
     this.initNoUiSlider({
       selector: 'year',
-      step: 10,
+      step: this.STEP_SLIDER_YEAR,
       start,
       end,
-      min: 1940,
-      max: 2020,
+      min: this.MIN_SLIDER_YEAR,
+      max: this.MAX_SLIDER_YEAR,
     });
   }
 
   drawToyCards(data: ToyCardData[]) {
-    this.toyCardsHTML.innerHTML = '';
+    if (this.toyCardsHTML) this.toyCardsHTML.innerHTML = '';
     data.forEach((item: ToyCardData) => {
       const toyCard = new ToyCard(item);
       const toyCardHTML = <HTMLElement>this.createHtmlElement(toyCard.render());
 
       toyCardHTML.addEventListener('click', (e) => {
         const curElement = e.currentTarget as HTMLElement;
-        if (!this.filterObj.selectedNumCards) this.filterObj.selectedNumCards = [];
+        if (!this.actualData.selectedNumCards) this.actualData.selectedNumCards = [];
 
         curElement.classList.toggle('toy-card_active');
         if (
           curElement.classList.contains('toy-card_active') &&
-          !this.filterObj.selectedNumCards.some((item) => item === curElement.id)
+          !this.actualData.selectedNumCards.some((item) => item === curElement.id)
         ) {
-          if (this.filterObj.selectedNumCards.length >= 20) {
+          if (this.actualData.selectedNumCards.length >= 20) {
             const popup = Popup.getInstance();
-            this.toyPageHTML.append(popup.drawPopup());
-            setTimeout(() => popup.showPopup(), 0);
+            const popupHTML = popup.drawPopup();
+            this.toyPageHTML?.append(popupHTML ? popupHTML : '');
+            setTimeout(popup.showPopup.bind(popup), 0);
             curElement.classList.toggle('toy-card_active');
             return;
           }
-          this.filterObj.selectedNumCards.push(item.num);
+          this.actualData.selectedNumCards.push(item.num);
         } else {
-          this.filterObj.selectedNumCards = this.filterObj.selectedNumCards.filter(
+          this.actualData.selectedNumCards = this.actualData.selectedNumCards.filter(
             (item) => item !== curElement.id
           );
         }
-        this.selectedCardsAmount.innerHTML = this.filterObj.selectedNumCards.length.toString();
+        this.selectedCardsAmount
+          ? (this.selectedCardsAmount.innerHTML =
+              this.actualData.selectedNumCards.length.toString())
+          : null;
       });
 
-      this.filterObj?.selectedNumCards?.forEach((item) =>
-        item === toyCardHTML.id ? toyCardHTML.classList.add('toy-card_active') : null
-      );
-      this.toyCardsHTML.append(toyCardHTML);
+      this.actualData?.selectedNumCards?.forEach((item) => {
+        if (item === toyCardHTML.id) {
+          toyCardHTML.classList.add('toy-card_active');
+        }
+      });
+      this.toyCardsHTML?.append(toyCardHTML);
     });
   }
 
@@ -207,38 +204,37 @@ export class ToysPage extends Page {
     });
   }
   changeDataCheckbox(data: ToyCardData[], selector: string): ToyCardData[] {
-    const objProperty = this.filterObj[selector as keyof ActualObjData] as String[];
+    const selectedCheckboxes = this.actualData[selector as keyof ActualData] as String[];
     return data.filter((item: ToyCardData): boolean =>
-      objProperty && objProperty.length
-        ? objProperty.includes(item[selector as keyof ToyCardData].toString())
+      selectedCheckboxes && selectedCheckboxes.length
+        ? selectedCheckboxes.includes(item[selector as keyof ToyCardData].toString())
         : true
     );
   }
   changeDataFav(data: ToyCardData[]): ToyCardData[] {
     return data.filter((item: ToyCardData): boolean =>
-      this.filterObj.isFav !== undefined ? item.favorite === this.filterObj.isFav : true
+      this.actualData.isFav !== undefined ? item.favorite === this.actualData.isFav : true
     );
   }
   changeDataSlider(data: ToyCardData[], selector: string): ToyCardData[] {
-    const objProperty = this.filterObj?.[selector as keyof ActualObjData] as FromToObj;
+    const sliderData = this.actualData?.[selector as keyof ActualData] as SliderFromTo;
     return data.filter((item: ToyCardData): boolean => {
-      if (objProperty?.[0] && objProperty?.[1]) {
+      if (sliderData?.from && sliderData?.to) {
         return (
-          +item[selector as keyof ToyCardData] >= +objProperty[0] &&
-          +item[selector as keyof ToyCardData] <= +objProperty[1]
+          +item[selector as keyof ToyCardData] >= +sliderData.from &&
+          +item[selector as keyof ToyCardData] <= +sliderData.to
         );
-      } else {
-        return true;
       }
+      return true;
     });
   }
   changeDataSearch(data: ToyCardData[]) {
     return data.filter((item) =>
-      this.filterObj.search ? item.name.toLowerCase().includes(this.filterObj.search) : true
+      this.actualData.search ? item.name.toLowerCase().includes(this.actualData.search) : true
     );
   }
 
-  changeDataCards(dataObj: ActualObjData) {
+  changeDataCards(dataObj: ActualData) {
     let toyCardsData = data.concat();
     switch (dataObj.sort) {
       case 'increase-name':
@@ -264,103 +260,109 @@ export class ToysPage extends Page {
     toyCardsData = this.changeDataSlider(toyCardsData, 'year');
     toyCardsData = this.changeDataSearch(toyCardsData);
 
-    const notFound = <HTMLElement>this.toyPageHTML.querySelector('.not-found-card');
+    const notFound = this.findElement(this.toyPageHTML, '.not-found-card');
     if (toyCardsData.length) {
-      notFound.classList.add('hide');
+      notFound?.classList.add('hide');
     } else {
-      notFound.classList.remove('hide');
+      notFound?.classList.remove('hide');
     }
     this.drawToyCards(toyCardsData);
   }
 
   changeUiCheckbox(e: Event, selector: string) {
     const target = e.target as HTMLInputElement;
-    let objProperty = this.filterObj?.[selector as keyof ActualObjData] as String[];
-
-    if (!objProperty) objProperty = [];
+    let selectedCheckboxes = this.actualData?.[selector as keyof ActualData] as String[];
+    if (!selectedCheckboxes) selectedCheckboxes = [];
     if (target.checked) {
-      objProperty?.push(target.value);
+      selectedCheckboxes?.push(target.value);
     } else {
-      objProperty = objProperty?.filter((item) => item !== target.value);
+      selectedCheckboxes = selectedCheckboxes?.filter((item) => item !== target.value);
     }
 
-    (this.filterObj[selector as keyof ActualObjData] as String[]) = objProperty;
-    this.changeDataCards(this.filterObj);
+    (this.actualData[selector as keyof ActualData] as String[]) = selectedCheckboxes;
+    this.changeDataCards(this.actualData);
   }
 
   filterToyCards() {
-    this.sortSelect.addEventListener('change', (e) => {
-      this.filterObj.sort = (e.target as HTMLSelectElement).value;
-      this.changeDataCards(this.filterObj);
+    this.sortSelect?.addEventListener('change', (e) => {
+      this.actualData.sort = (e.target as HTMLSelectElement).value;
+      this.changeDataCards(this.actualData);
     });
-
-    this.toyPageHTML.querySelector('.shape-categories')?.addEventListener('change', (e) => {
+    this.findElement(this.toyPageHTML, '.shape-categories')?.addEventListener('change', (e) => {
       this.changeUiCheckbox(e, 'shape');
     });
-
-    this.toyPageHTML.querySelector('.color-categories')?.addEventListener('change', (e) => {
+    this.findElement(this.toyPageHTML, '.color-categories')?.addEventListener('change', (e) => {
       this.changeUiCheckbox(e, 'color');
     });
 
-    this.toyPageHTML.querySelector('.size-categories')?.addEventListener('change', (e) => {
+    this.findElement(this.toyPageHTML, '.size-categories')?.addEventListener('change', (e) => {
       this.changeUiCheckbox(e, 'size');
     });
 
-    this.toyPageHTML.querySelector('.fav-category')?.addEventListener('change', (e) => {
+    this.findElement(this.toyPageHTML, '.fav-category')?.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
-      this.filterObj.isFav = target.checked;
-      this.changeDataCards(this.filterObj);
+      this.actualData.isFav = target.checked;
+      this.changeDataCards(this.actualData);
     });
 
-    this.toyPageHTML.querySelector('.default-settings-btn')?.addEventListener('click', () => {
+    this.findElement(this.toyPageHTML, '.default-settings-btn')?.addEventListener('click', () => {
       this.setDefaultFilters();
     });
   }
 
   setDefaultFilters() {
-    this.filterObj = {};
+    this.actualData = {};
 
-    this.selectedCardsAmount.textContent = this.START_SELECTED_NUM.toString();
-    this.searchInput.value = '';
+    if (this.selectedCardsAmount)
+      this.selectedCardsAmount.textContent = this.START_SELECTED_NUM.toString();
+    if (this.searchInput) this.searchInput.value = '';
 
     this.toyPageHTML
-      .querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+      ?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
       .forEach((item) => (item.checked = false));
+    const defaultOption: HTMLOptionElement | null = this.findElement(
+      this.toyPageHTML,
+      'option[value="default"]'
+    );
+    if (defaultOption) defaultOption.selected = true;
 
-    (this.toyPageHTML.querySelector('option[value="default"]') as HTMLOptionElement).selected =
-      true;
-
-    const sliders: NodeListOf<target> =
-      this.toyPageHTML.querySelectorAll<HTMLElement>('.noUiSlider');
-    sliders.forEach((item) => {
+    const sliders: NodeListOf<target> | null = this.toyPageHTML
+      ? this.toyPageHTML.querySelectorAll<HTMLElement>('.noUiSlider')
+      : null;
+    sliders?.forEach((item) => {
       const max = item.querySelector('.noUi-handle-upper')?.getAttribute('aria-valuemax');
       const min = item.querySelector('.noUi-handle-lower')?.getAttribute('aria-valuemin');
-      (item.noUiSlider as API).set([`${min}`, `${max}`]);
+      const noUiItem: API | undefined = item.noUiSlider;
+      noUiItem?.set([`${min}`, `${max}`]);
     });
 
-    this.changeDataCards(this.filterObj);
+    this.changeDataCards(this.actualData);
   }
 
   initNoUiSlider({ selector, step, start, end, min, max }: InitNoUiSlider) {
-    const customSlider: target = <HTMLElement>document.querySelector(`#${selector}-slider`);
-    const skipValues: HTMLElement[] = [
-      <HTMLElement>document.querySelector(`#skip-value-${selector}__lower`),
-      <HTMLElement>document.querySelector(`#skip-value-${selector}__upper`),
-    ];
-    if (!customSlider.noUiSlider)
+    const customSlider: target | null = document.querySelector(`#${selector}-slider`);
+    const lowerValue: HTMLElement | null = document.querySelector(`#skip-value-${selector}__lower`);
+    const upperValue: HTMLElement | null = document.querySelector(`#skip-value-${selector}__upper`);
+    let skipValues: HTMLElement[];
+    if (lowerValue && upperValue) skipValues = [lowerValue, upperValue];
+    if (customSlider && !customSlider?.noUiSlider)
       this.noUiSlider.drawSlider({ customSlider, step, start, end, min, max });
-    const curValues = customSlider.querySelectorAll<HTMLElement>('.noUi-tooltip');
+    const curValues = customSlider?.querySelectorAll<HTMLElement>('.noUi-tooltip');
 
-    const setKeyValue = (obj: Record<string, any>, key: string, handle: number, value: string) => {
-      if (!obj[key]) obj[key] = {};
-      obj[key][handle] = value;
+    const setKeyValue = (obj: ActualData, key: keyof ActualData, handle: string, value: number) => {
+      if (!obj[key]) (obj[key] as SliderFromTo) = {};
+      if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+        if (handle) (obj[key] as SliderFromTo)[handle as keyof SliderFromTo] = value;
+      }
     };
-    (customSlider.noUiSlider as API).on('update', (arr: (string | number)[], handle: number) => {
-      const curValue = curValues[handle].innerHTML;
-      skipValues[handle].innerHTML = curValue;
-      setKeyValue(this.filterObj, selector, handle, curValue);
-      this.changeDataCards(this.filterObj);
-    });
+
+    if (customSlider?.noUiSlider)
+      customSlider?.noUiSlider.on('update', (arr: (string | number)[], handle: number) => {
+        const curValue = curValues ? curValues[handle].innerHTML : '';
+        skipValues[handle].innerHTML = curValue;
+        setKeyValue(this.actualData, selector, FromToKeys[handle], +curValue);
+        this.changeDataCards(this.actualData);
+      });
   }
 
   render(): string {

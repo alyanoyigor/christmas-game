@@ -1,26 +1,26 @@
-import { Page } from './../page/page';
+import { HTMLElementEvent } from 'common/types';
+import { Page } from 'views/page/page';
 import './index.scss';
 
 export class Popup extends Page {
-  public popupHTML;
+  public popupHTML: Element | null;
   private static instance: Popup;
 
   constructor() {
     super();
 
-    this.popupHTML = <HTMLElement>this.createHtmlElement(this.render());
-    const popupClose = <HTMLElement>this.popupHTML.querySelector('.close-btn');
+    this.popupHTML = this.createHtmlElement(this.render());
+    const popupClose = this.popupHTML?.querySelector('.close-btn');
 
-    popupClose.addEventListener('click', (e) => {
+    popupClose?.addEventListener('click', (e) => {
       e.preventDefault;
       this.removePopup();
     });
 
-    this.popupHTML.addEventListener('click', (e) => {
-      let target = <HTMLElement>e.target;
-      if (target.classList.contains('popup-wrapper')) {
-        this.removePopup();
-      } else return;
+    this.popupHTML?.addEventListener('click', (e: HTMLElementEvent<Event, HTMLElement>) => {
+      const target = e.target;
+      if (target instanceof HTMLElement)
+        target.classList.contains('popup-wrapper') ? this.removePopup() : null;
     });
   }
 
@@ -28,7 +28,6 @@ export class Popup extends Page {
     if (!Popup.instance) {
       Popup.instance = new Popup();
     }
-
     return Popup.instance;
   }
 
@@ -37,11 +36,11 @@ export class Popup extends Page {
   }
 
   showPopup() {
-    this.popupHTML.classList.add('active');
+    this.popupHTML?.classList.add('active');
   }
 
   removePopup() {
-    this.popupHTML.classList.remove('active');
+    this.popupHTML?.classList.remove('active');
   }
 
   render() {

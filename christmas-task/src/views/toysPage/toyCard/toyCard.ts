@@ -1,15 +1,5 @@
+import { ToyCardData } from 'common/interfaces';
 import './index.scss';
-
-export type ToyCardData = {
-  num: string;
-  name: string;
-  count: string;
-  year: string;
-  shape: string;
-  color: string;
-  size: string;
-  favorite: boolean;
-};
 
 export class ToyCard {
   private num: string;
